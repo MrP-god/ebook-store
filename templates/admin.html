@@ -1,0 +1,51 @@
+{% extends 'baseTamplate.html' %}
+
+{% block head %}
+    <title>admin pannel</title>
+{% endblock head %}
+
+{% block body %}
+
+<main class="content">
+    <!-- items list -->
+    <section class="item-list">
+
+        {% if not items %}
+            <div>
+                <h5>there are no items </h5>
+                <p>(－_－) zzZ</p>
+            </div>
+        {% else %}
+            <table>
+                <tr>
+                    <th class="item-header">Book Title</th>
+                    <th class="action-header">actions</th>
+                </tr>
+                {% for item in items %}
+                    <tr class="item-row">
+                        <td>{{item.title}}</td>
+                        <td>
+                            <a href="/update/{{item.id}}">Edit</a>
+                            <a href="/delete/{{item.id}}">Delete</a>                            
+                        </td>
+                    </tr>
+                {% endfor %}
+                
+            </table>  
+        {% endif %}
+    </section>
+    <!-- form adding new items -->
+    <section class="item-form">
+        <h3>INSERT NEW ITEM</h3>
+        <form action="/admin" method="POST">
+            <input type="text" name="title" placeholder="title" required> 
+            <input type="text" name="description" placeholder="description" required>
+            <input type="number" name="price" step="0.01" min="0" placeholder="price " required>
+            <!-- <input type="text" name="book-file"> --> 
+            <!-- <input type="text" name="book-cover"> -->
+            <input type="submit" value="List Item" id="btn-add">
+        </form>
+    </section>
+</main>
+    
+{% endblock body %} 

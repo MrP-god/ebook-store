@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="{{url_for("static", filename="styles.css")}}">
+    {% block head %}
+        
+    {% endblock head %}
+</head>
+<body>
+    <nav>
+        <h3>Admin pannel</h3>
+        <div>
+            <button>logout</button>
+            <!-- <button>create</button> -->
+        </div>
+    </nav>
+    {% block body %}
+        
+    {% endblock body %}
+    <footer>
+        
+    </footer>
+</body>
+</html>

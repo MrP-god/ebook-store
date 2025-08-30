@@ -1,0 +1,206 @@
+@import url("https://fonts.googleapis.com/css2?family=Victor+Mono:ital,wght@0,100..700;1,100..700&display=swap");
+*,
+::after,
+::before {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Victor Mono", monospace;
+}
+
+body {
+  background-color: #fff;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+body nav {
+  background-color: #242424;
+  color: #87ceeb;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 5px;
+  height: 25px;
+}
+body nav div {
+  display: flex;
+  flex-direction: row;
+  gap: 5px;
+  margin-left: 10px;
+  margin: 5px 0;
+}
+body nav div button {
+  padding: 2.5px;
+  background-color: #87ceeb;
+  color: darkred;
+  font-weight: 1000;
+  border: none;
+}
+body .content {
+  width: 100%;
+  height: 100%;
+  padding-top: 20px;
+  background-color: #fff;
+  color: #242424;
+  display: flex;
+  flex-direction: row;
+  border: 2px solid;
+  flex: 1;
+}
+body .content .item-list {
+  width: 350px;
+  height: 100%;
+}
+body .content .item-list div {
+  margin-top: 20px;
+  text-align: center;
+}
+body .content .item-list div h5, body .content .item-list div p {
+  font-weight: 800;
+  font-size: 14px;
+}
+body .content .item-list th {
+  background-color: #242424;
+  color: #c0c0c0;
+}
+body .content .item-list .item-header {
+  width: 70%;
+}
+body .content .item-list .action-header {
+  width: 30%;
+}
+body .content .item-form {
+  flex: 1;
+}
+body .content .item-form h3 {
+  text-align: center;
+  font-weight: 1000;
+}
+body .content .item-form form {
+  display: flex;
+  flex-direction: column;
+  color: #242424;
+}
+body .content .item-form form input {
+  border: none;
+  background-color: #87ceeb;
+  padding: 10px;
+  margin: 5px;
+  font-weight: 800;
+  outline: none;
+}
+body .content .item-form form input[type=submit] {
+  background-color: #c0c0c0;
+  color: #d40071;
+  transition: all 0.3s ease;
+}
+body .content .item-form form input[type=submit]:hover {
+  background-color: #d40071;
+  color: #242424;
+}
+body .edit-section {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 20px;
+}
+body .edit-section h3 {
+  text-align: center;
+}
+body .edit-section form {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+body .edit-section label {
+  margin-left: 10px;
+  font-size: 14px;
+  font-weight: 800;
+}
+body .edit-section input {
+  border: 1px solid #87ceeb;
+  background-color: #fff;
+  padding: 10px;
+  margin: 5px;
+  font-weight: 800;
+  outline: none;
+}
+body .edit-section input[type=submit] {
+  border: none;
+  background-color: #c0c0c0;
+  color: #d40071;
+  transition: all 0.3s ease;
+}
+body .edit-section input[type=submit]:hover {
+  background-color: #d40071;
+  color: #242424;
+}
+body footer {
+  background-color: #242424;
+  height: 25px;
+  width: 100%;
+}
+
+.store-page {
+  width: 100%;
+  height: 100%;
+  padding: 20px;
+  /* Default: Mobile (phone) - 2 columns */
+  /* Tablet (iPad) - 4 columns */
+  /* Desktop/Computer - 8 columns */
+}
+.store-page h3 {
+  text-align: center;
+}
+.store-page .book-grid {
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+  width: 100%;
+}
+.store-page .book-grid {
+  grid-template-columns: repeat(2, 1fr);
+}
+@media (min-width: 768px) {
+  .store-page .book-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+@media (min-width: 1024px) {
+  .store-page .book-grid {
+    grid-template-columns: repeat(8, 1fr);
+  }
+}
+.store-page .book-item {
+  background: #fff;
+  padding: 10px;
+  transition: transform 0.2s ease;
+  border: none;
+  box-shadow: 0 0 1px 1px #87ceeb;
+  display: flex;
+  flex-direction: column;
+  align-items: end;
+  justify-content: end;
+}
+.store-page .book-item p {
+  font-weight: 800;
+}
+.store-page .book-item .title {
+  font-size: 12px;
+}
+.store-page .book-item .price {
+  color: #d40071;
+  font-size: 10px;
+}
+.store-page .book-item:hover {
+  transform: scale(105%);
+  background-color: #d40071;
+  color: white;
+}
+.store-page .book-item:hover .price {
+  color: #fff;
+}/*# sourceMappingURL=store.css.map */

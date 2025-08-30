@@ -1,0 +1,30 @@
+{% extends 'baseTamplate.html' %}
+
+{% block head %}
+    <title>Artiom Ivanov | Ebook Store</title>
+    <link rel="stylesheet" href="{{url_for("static", filename="store.css")}}">
+{% endblock head %}
+
+
+
+{% block body %}
+    
+    <main class="content">
+        <!-- here it goes the store page  -->    
+        <section class="store-page">
+            <h3>All Books</h3>
+            <!-- here is the grid of items -->
+            <div class="book-grid">
+                {% for item in items %}
+                    <button class="book-item">
+                        <!-- container item -->
+                            <p class="title">{{item.title}}</p>
+                            <p class="price">${{item.price}}</p>
+                    </button>
+                {% endfor %}
+            </div>
+            
+        </section>
+    </main>
+
+{% endblock body %}

@@ -1,5 +1,5 @@
 #imports
-from flask import Flask, render_template, redirect, request
+from flask import Flask, render_template, redirect, request, session
 from flask_scss import Scss
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
@@ -39,11 +39,24 @@ with app.app_context():
     db.create_all()
 
 
+#================================ROUTES STORE==========================================================
+
+
 
 #routes
 @app.route("/") #this is a decoretor that transform the index function in a route (url)
 def index():
-    return render_template("store.html")
+    items = Item.query.order_by(Item.created).all()
+    return render_template("index.html", items=items)
+
+
+
+
+
+
+
+#================================ROUTES ADMIN==========================================================
+
 
 @app.route("/admin", methods=['POST','GET'])
 def admin():
@@ -100,6 +113,8 @@ def update(id:int):
             return f"Error: {e}"
     else:
         return render_template('edit.html', item=item)
+
+#==========================================================================================
 
 
 

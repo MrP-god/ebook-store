@@ -42,12 +42,9 @@ body{
             margin-left: 10px;
             margin: 5px 0;
 
-            button{
-                padding: 2.5px;
-                background-color: $primary-color;
-                color: darkred;
-                font-weight: 1000;
-                border: none;
+            a{
+                color: $primary-color;
+                text-decoration: none;
             }
         }
     }

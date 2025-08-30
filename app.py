@@ -134,8 +134,10 @@ def cart():
         return render_template("cart.html")
 
 #logout
-
-
+@app.route("/logout", methods=["GET"])
+def logout():
+    session.pop("username", None)
+    return redirect("/")
 
 
 

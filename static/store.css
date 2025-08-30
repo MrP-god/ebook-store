@@ -33,12 +33,9 @@ body nav div {
   margin-left: 10px;
   margin: 5px 0;
 }
-body nav div button {
-  padding: 2.5px;
-  background-color: #87ceeb;
-  color: darkred;
-  font-weight: 1000;
-  border: none;
+body nav div a {
+  color: #87ceeb;
+  text-decoration: none;
 }
 body .content {
   width: 100%;

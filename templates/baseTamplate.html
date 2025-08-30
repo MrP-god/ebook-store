@@ -12,8 +12,15 @@
     <nav>
         <h3>Ivanov Artiom Store</h3>
         <div>
-            <button>logout</button>
-            <!-- <button>create</button> -->
+            {% if not "username" in session %}
+                <a href="/login">login</a>
+                <a href="/cart">cart</a>
+            {% else %}
+                <a href="/cart">cart</a>
+                <a href="/logout">logout</a>
+            {% endif %}
+            
+            
         </div>
     </nav>
     {% block body %}

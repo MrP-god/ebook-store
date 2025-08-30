@@ -1,0 +1,20 @@
+{% extends 'baseTamplate.html' %}
+
+{% block head %}
+    <title>Artiom Ivanov Store | Register</title>
+{% endblock head %}
+
+{% block body %}
+    <main>
+        <p>{{error}}</p>
+        <form action="/login" method="post">
+            <input type="username" placeholder="username" name="username">
+            <input type="password" placeholder="password" name="password">
+            <input type="submit" value="login">
+            <div>
+                <p>New? <a href="/register">Create account</a></p>
+            </div>
+        </form>
+        <a href="/">back to store</a>
+    </main>
+{% endblock body %}

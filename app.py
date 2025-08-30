@@ -1,8 +1,11 @@
 #imports
 from flask import Flask, render_template, redirect, request, session
+from werkzeug.security import generate_password_hash, check_password_hash
 from flask_scss import Scss
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 from datetime import datetime
+import os
 
 
 
@@ -11,13 +14,16 @@ from datetime import datetime
 #setup
 app = Flask(__name__) #this creates the app
 Scss(app=app)
+app.secret_key = os.environ.get("SECRET_KEY") or "fallback-dev-key"
 
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///database.db"
-app.config["SQLALCHEMY_TRACk_MODIFICATION"] = False
+
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///database.db" #this link the db
+app.config["SQLALCHEMY_TRACk_MODIFICATION"] = False #this is for production
 db = SQLAlchemy(app=app)
 
+#==================MODELS========================================================================
 
-#models Data Class ~ row of data
+#==================Item
 class Item(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), nullable=False)
@@ -35,7 +41,28 @@ class Item(db.Model):
         self.description = description
         self.price = price
 
-with app.app_context():
+#================= User
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(100), unique=True, nullable=False)
+    email = db.Column(db.String(200), nullable=False)
+    passwordHash  = db.Column(db.String(150), nullable=False)
+
+    def __init__(self, username, email, password):
+        self.setPassword(password=password)
+        self.username = username
+        self.email = email
+
+    def setPassword(self, password):
+        self.passwordHash = generate_password_hash(password=password)
+
+    def checkPassword(self, password):
+        return check_password_hash(self.passwordHash, password=password)
+
+
+
+
+with app.app_context(): # this is for producation if not goes into main (creates the db in the  db)
     db.create_all()
 
 
@@ -50,6 +77,67 @@ def index():
     return render_template("index.html", items=items)
 
 
+#login
+@app.route("/login", methods=["POST", "GET"])
+def login():
+    
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+        user = User.query.filter_by(username=username).first()
+
+        if user and user.checkPassword(password):
+            session["username"] = username
+            return redirect("/")
+        else: 
+            return render_template("login.html", error="username or password incorect")
+    else:
+
+        return render_template("login.html", error="")
+
+#register
+@app.route("/register", methods=["POST", "GET"])
+def register():
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+        email = request.form["email"]
+
+        # Check for existing username or email
+        userEmail = User.query.filter_by(email=email).first()
+        userUsername = User.query.filter_by(username=username).first()
+
+        if userEmail:
+            return render_template("register.html", error="Email already registered, please login!")
+        if userUsername:
+            return render_template("register.html", error="Username already taken!")
+
+        newUser = User(username=username, email=email, password=password)
+        try:
+            db.session.add(newUser)
+            db.session.commit()
+            session["username"] = username
+            return redirect("/")
+        except Exception as e:
+            print(f"Registration error: {e}")  # For debugging
+            return render_template("register.html", error="Registration failed. Please try again.")
+    else:
+        return render_template("register.html")
+            
+
+#cart
+@app.route("/cart", methods=["GET"])
+def cart():
+    if not "username" in session:
+        return render_template("login.html")
+    else:
+        return render_template("cart.html")
+
+#logout
+@app.route("/logout", methods=["GET"])
+def logout():
+    session.pop("username", None)
+    return redirect("/")
 
 
 
@@ -120,6 +208,8 @@ def update(id:int):
 
 
 # main
-if __name__ == "__main__":        
+if __name__ == "__main__":  
+    # with app.app_context(): #this here is for dev
+    #     db.create_all()      
 
     app.run(debug=True)

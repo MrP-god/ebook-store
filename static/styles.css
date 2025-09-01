@@ -90,6 +90,17 @@ body .content .item-form form input {
   font-weight: 800;
   outline: none;
 }
+body .content .item-form form label {
+  font-weight: bolder;
+  color: black;
+  font-size: 12px;
+  padding-left: 5px;
+}
+body .content .item-form form input[type=file] {
+  background-color: white;
+  padding: 5px;
+  margin: 0;
+}
 body .content .item-form form input[type=submit] {
   background-color: #c0c0c0;
   color: #d40071;

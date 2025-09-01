@@ -7,6 +7,12 @@
     {% block head %}
         
     {% endblock head %}
+    <style>
+        nav a{
+            border-left: 1px solid;
+            padding-left: 5px;
+        }
+    </style>
 </head>
 <body>
     <nav>
@@ -16,10 +22,12 @@
                 <a href="/login">login</a>
                 <a href="/cart">cart</a>
             {% else %}
+                {% if session.get("userType") == "admin" %}
+                    <a href="/admin">admin pannel</a>
+                {% endif %}
                 <a href="/cart">cart</a>
                 <a href="/logout">logout</a>
             {% endif %}
-            
             
         </div>
     </nav>

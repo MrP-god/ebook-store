@@ -1,12 +1,12 @@
 #imports
-from flask import Flask, render_template, redirect, request, session
+from flask import Flask, render_template, redirect, request, session, url_for
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_scss import Scss
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from datetime import datetime
 import os
-
+from functools import wraps
 
 
 #MY APP
@@ -20,6 +20,7 @@ app.secret_key = os.environ.get("SECRET_KEY") or "fallback-dev-key"
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///database.db" #this link the db
 app.config["SQLALCHEMY_TRACk_MODIFICATION"] = False #this is for production
 db = SQLAlchemy(app=app)
+migrate = Migrate(app=app, db=db)
 
 #==================MODELS========================================================================
 
@@ -45,13 +46,15 @@ class Item(db.Model):
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), unique=True, nullable=False)
-    email = db.Column(db.String(200), nullable=False)
+    email = db.Column(db.String(120), nullable=False)
     passwordHash  = db.Column(db.String(150), nullable=False)
+    role = db.Column(db.String(20), nullable=False)
 
     def __init__(self, username, email, password):
         self.setPassword(password=password)
         self.username = username
         self.email = email
+        self.role = "user" # explicit save the role
 
     def setPassword(self, password):
         self.passwordHash = generate_password_hash(password=password)
@@ -73,6 +76,7 @@ with app.app_context(): # this is for producation if not goes into main (creates
 #routes
 @app.route("/") #this is a decoretor that transform the index function in a route (url)
 def index():
+
     items = Item.query.order_by(Item.created).all()
     return render_template("index.html", items=items)
 
@@ -88,7 +92,8 @@ def login():
 
         if user and user.checkPassword(password):
             session["username"] = username
-            return redirect("/")
+            session["userType"] = user.role
+            return redirect(url_for("index"))
         else: 
             return render_template("login.html", error="username or password incorect")
     else:
@@ -146,10 +151,22 @@ def logout():
 #================================ROUTES ADMIN==========================================================
 
 
+def adminRequired(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        # logic 
+        if "username" not in session or session.get('userType') != "admin":
+            return redirect(url_for("index"))
+        return f(*args, **kwargs)
+    return wrapper
+
+
+
+
 @app.route("/admin", methods=['POST','GET'])
+@adminRequired
 def admin():
     # business logic
-    
     ## add item logic 
     if request.method == "POST": 
         itemTitle = request.form["title"]
@@ -174,7 +191,9 @@ def admin():
     #if the request is get then  from the db querry all the tasks oredred by creation time
 
 
+
 @app.route("/delete/<int:id>")
+@adminRequired
 def delete(id:int):
     deleteItem = Item.query.get_or_404(id)
     #this gets the itme to delete by id
@@ -187,6 +206,7 @@ def delete(id:int):
 
 
 @app.route("/update/<int:id>", methods=["GET", "POST"])
+@adminRequired
 def update(id:int):
     item = Item.query.get_or_404(id)
 

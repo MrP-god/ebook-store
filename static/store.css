@@ -90,6 +90,9 @@ body .content .item-form form input {
   font-weight: 800;
   outline: none;
 }
+body .content .item-form form input[type=file] {
+  color: white;
+}
 body .content .item-form form input[type=submit] {
   background-color: #c0c0c0;
   color: #d40071;

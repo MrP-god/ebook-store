@@ -7,6 +7,7 @@ from flask_migrate import Migrate
 from datetime import datetime
 import os
 from functools import wraps
+import stripe
 
 
 #MY APP
@@ -15,6 +16,7 @@ from functools import wraps
 app = Flask(__name__) #this creates the app
 Scss(app=app)
 app.secret_key = os.environ.get("SECRET_KEY") or "fallback-dev-key"
+stripe.api_key = os.environ.get("STRIPE_KEY")
 
 
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///database.db" #this link the db
@@ -150,6 +152,34 @@ def logout():
 def bookPage(id:int):
     item = Item.query.get_or_404(id)
     return render_template("book-page.html", item=item)
+
+
+#================================ROUTES CHECKOUT==========================================================
+
+@app.route("/checkout/<int:id>", methods=["GET", "POST"])
+def checkout(id:int):
+
+    item = Item.query.get_or_404(id)
+    session = stripe.checkout.Session.create(
+        payment_method_types=["card"],
+        mode="payment",
+        line_items=[{
+            "price_data": {
+                "currency": "eur",
+                "product_data": {
+                    "name": item.title,
+                    "description": item.description,
+                },
+                "unit_amount": int(item.price * 100), #in cents
+            },
+            "quantity": 1,
+        }],
+        success_url=url_for("index" , _external=True), 
+        cancel_url=url_for("bookPage", id=id, _external=True)
+    )
+    return redirect(session.url)
+
+
 
 
 

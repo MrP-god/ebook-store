@@ -45,7 +45,6 @@ body .content {
   color: #242424;
   display: flex;
   flex-direction: row;
-  border: 2px solid;
   flex: 1;
 }
 body .content .item-list {
@@ -89,9 +88,6 @@ body .content .item-form form input {
   margin: 5px;
   font-weight: 800;
   outline: none;
-}
-body .content .item-form form input[type=file] {
-  color: white;
 }
 body .content .item-form form input[type=submit] {
   background-color: #c0c0c0;

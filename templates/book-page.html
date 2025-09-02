@@ -1,11 +1,21 @@
 {% extends 'baseTamplate.html' %}
 
 {% block head %}
-    
 {% endblock head %}
 
 
 
 {% block body %}
-    
+    <main class="content"> 
+        <div style="display: flex; flex-direction: column;">
+            <a href="/">back to store</a>
+
+            <div>
+                <h3>{{item.title}}</h3>
+                <p>description</p>
+            </div>
+        </div>
+    </main>
+
+
 {% endblock body %}

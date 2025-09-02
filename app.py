@@ -145,6 +145,13 @@ def logout():
     return redirect("/")
 
 
+#ebook-single-page
+@app.route("/book-page/<int:id>", methods=["GET"])
+def bookPage(id:int):
+    item = Item.query.get_or_404(id)
+    return render_template("book-page.html", item=item)
+
+
 
 
 

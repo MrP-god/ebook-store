@@ -16,14 +16,14 @@
             <!-- here is the grid of items -->
             <div class="book-grid">
                 {% for item in items %}
-                    <button class="book-item">
+                    <button class="book-item" onclick="window.location.href='/book-page/{{item.id}}'">
                         <!-- container item -->
                             <p class="title">{{item.title}}</p>
                             <p class="price">${{item.price}}</p>
                     </button>
                 {% endfor %}
             </div>
-            
+             
         </section>
     </main>
 

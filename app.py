@@ -3,11 +3,14 @@ from flask import Flask, render_template, redirect, request, session, url_for
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_scss import Scss
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import JSON
+from sqlalchemy.ext.mutable import MutableList
 from flask_migrate import Migrate
 from datetime import datetime
 import os
 from functools import wraps
 import stripe
+
 
 
 #MY APP
@@ -54,6 +57,7 @@ class User(db.Model):
     email = db.Column(db.String(120), nullable=False)
     passwordHash  = db.Column(db.String(150), nullable=False)
     role = db.Column(db.String(20), nullable=False)
+    cartItems = db.Column(MutableList.as_mutable(JSON), default=list)
 
     def __init__(self, username, email, password):
         self.setPassword(password=password)
@@ -66,6 +70,19 @@ class User(db.Model):
 
     def checkPassword(self, password):
         return check_password_hash(self.passwordHash, password=password)
+    
+    def addCartItem(self, itemID):
+        if self.cartItems is None:
+            self.cartItems = []
+        if itemID not in self.cartItems:
+            self.cartItems.append(itemID)
+        # else: do nothing if already in cart
+        return self
+    
+    def removeCartItem(self, itemID):
+        if self.cartItems and itemID in self.cartItems:
+            self.cartItems.remove(itemID)
+        return self
 
 
 
@@ -135,13 +152,6 @@ def register():
         return render_template("register.html")
             
 
-#cart
-@app.route("/cart", methods=["GET"])
-def cart():
-    if not "username" in session:
-        return render_template("login.html")
-    else:
-        return render_template("cart.html")
 
 #logout
 @app.route("/logout", methods=["GET"])
@@ -162,25 +172,28 @@ def bookPage(id:int):
 @app.route("/checkout/<int:id>", methods=["GET", "POST"])
 def checkout(id:int):
 
-    item = Item.query.get_or_404(id)
-    session = stripe.checkout.Session.create(
-        payment_method_types=["card"],
-        mode="payment",
-        line_items=[{
-            "price_data": {
-                "currency": "eur",
-                "product_data": {
-                    "name": item.title,
-                    "description": item.description,
+    if not "username" in session:
+        return redirect(url_for("bookPage", id=id))
+    else:   
+        item = Item.query.get_or_404(id)
+        stripeSession = stripe.checkout.Session.create(
+            payment_method_types=["card"],
+            mode="payment",
+            line_items=[{
+                "price_data": {
+                    "currency": "eur",
+                    "product_data": {
+                        "name": item.title,
+                        "description": item.description,
+                    },
+                    "unit_amount": int(item.price * 100), #in cents
                 },
-                "unit_amount": int(item.price * 100), #in cents
-            },
-            "quantity": 1,
-        }],
-        success_url=url_for("index" , _external=True), 
-        cancel_url=url_for("bookPage", id=id, _external=True)
-    )
-    return redirect(session.url)
+                "quantity": 1,
+            }],
+            success_url=url_for("index" , _external=True), 
+            cancel_url=url_for("bookPage", id=id, _external=True)
+        )
+        return redirect(stripeSession.url)
 
 
 
@@ -262,7 +275,60 @@ def update(id:int):
     else:
         return render_template('edit.html', item=item)
 
-#==========================================================================================
+#=======================================ROUTES CART===================================================
+
+#cart
+@app.route("/cart", methods=["GET"])
+def cart():
+    if not "username" in session:
+        return render_template("login.html")
+    else:
+        user = User.query.filter_by(username=session["username"]).first()
+        booksIDs = user.cartItems #this is an array of numbers
+        items = Item.query.filter(Item.id.in_(booksIDs)).all()
+        return render_template("cart.html", items=items)
+    
+
+@app.route("/add-cart/<int:id>", methods=["POST" ,"GET"])
+def addItemCart(id:int):
+    if not "username" in session:
+        return redirect(url_for("bookPage", id=id))
+    else:
+        # here i add the id to the model
+        userCart = User.query.filter_by(username=session["username"]).first()
+        userCart.addCartItem(id)
+        db.session.commit()
+        return redirect(url_for("index"))
+    
+@app.route("/remove-cart-item/<int:id>", methods=["POST", "GET"])
+def remoteItemCart(id:int):
+    user = User.query.filter_by(username=session["username"]).first()
+    user.removeCartItem(id)
+    db.session.commit()
+    return redirect(url_for("cart"))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -6,7 +6,21 @@
 
 {% block body %}
     <main class="content">
-        <a href="/">back to store</a>
-        <h1>this is the cart</h1>
+        <div style="display: flex; flex-direction: column;">
+            <a  href="/">back to store</a>
+            {% if not items %}
+                <p>no items in here -_-</p>
+            {% else %}
+                <ul>
+                    {% for item in items %}
+                        <li>
+                            <h2>{{item.title}}</h2>
+                            <p>{{item.price}}</p>
+                            <a href="/remove-cart-item/{{item.id}}">x</a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
     </main>
 {% endblock body %}

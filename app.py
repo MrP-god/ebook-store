@@ -11,6 +11,9 @@ import os
 from functools import wraps
 import stripe
 
+# my modules
+from r2_worker import R2Bucket
+
 
 
 #MY APP
@@ -20,6 +23,8 @@ app = Flask(__name__) #this creates the app
 Scss(app=app)
 app.secret_key = os.environ.get("SECRET_KEY") or "fallback-dev-key"
 stripe.api_key = os.environ.get("STRIPE_KEY") 
+
+bucket = R2Bucket("ebook-artiomivanov-store")
 
 
 
@@ -225,12 +230,19 @@ def admin():
         itemTitle = request.form["title"]
         itemDescription = request.form["description"]
         itemPrice = request.form["price"]
+
+        filePath = request.files["pdf-book"]
+        tempPath = f"{filePath.filename}"
+        filePath.save(tempPath)
+        
         newItem = Item(title=itemTitle, description=itemDescription, price=itemPrice)
 
         
         try:
             db.session.add(newItem) #add row in session
             db.session.commit()     #add all the row added in db
+            bucket.upload_file(tempPath, f"{itemTitle}")
+            os.remove(tempPath)
             #this is like git, where we stage the changes and then commit them to finalize
             return redirect("/admin")
         except Exception as e:

@@ -1,41 +1,42 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="emerald">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{url_for("static", filename="styles.css")}}">
-    {% block head %}
-        
-    {% endblock head %}
-    <style>
-        nav a{
-            border-left: 1px solid;
-            padding-left: 5px;
-        }
-    </style>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5/dist/full.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5/themes.css" rel="stylesheet">
+
+
+    {% block head %}{% endblock head %}
 </head>
-<body>
-    <nav>
-        <h3>Ivanov Artiom Store</h3>
-        <div>
+<body class="min-h-screen flex flex-col bg-base-100 text-base-content">
+    <!-- Navbar -->
+    <nav class="navbar bg-primary text-primary-content px-4">
+        <h3 class="text-lg font-bold">Ivanov Artiom Store</h3>
+        <div class="ml-auto flex gap-4">
             {% if not "username" in session %}
-                <a href="/login">login</a>
-                <a href="/cart">cart</a>
+                <a href="/login" class="btn btn-sm btn-secondary">Login</a>
+                <a href="/cart" class="btn btn-sm btn-outline">Cart</a>
             {% else %}
-                {% if session.get("userType") == "admin" %}
-                    <a href="/admin">admin pannel</a>
-                {% endif %}
-                <a href="/cart">cart</a>
-                <a href="/logout">logout</a>
+            {% if session.get("userType") == "admin" %}
+                <a href="/admin" class="btn btn-sm btn-accent">Admin Panel</a>
             {% endif %}
-            
+                <a href="/cart" class="btn btn-sm btn-outline">Cart</a>
+                <a href="/logout" class="btn btn-sm btn-error">Logout</a>
+            {% endif %}
         </div>
     </nav>
-    {% block body %}
-        
-    {% endblock body %}
-    <footer>
-        
+
+    <!-- Main -->
+    <main class="flex-grow container mx-auto p-6">
+        {% block body %}{% endblock body %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer footer-center p-4 bg-base-200 text-base-content">
+        <p class="text-sm">© 2024 Ivanov Artiom Store</p>
     </footer>
 </body>
 </html>

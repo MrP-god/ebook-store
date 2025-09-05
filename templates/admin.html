@@ -1,64 +1,71 @@
 {% extends 'baseTamplate.html' %}
 
 {% block head %}
-    <title>Artiom Ivanov | Admin Pannel</title>
-
-    <style>
-        label{
-            font-size: 14px;
-            padding-left: 5px;
-            font-weight: 500;
-        }
-    </style>
+    <title>Artiom Ivanov | Admin Panel</title>
 {% endblock head %}
 
 {% block body %}
+<main class="min-h-screen p-6 flex flex-col gap-10">
 
-<main class="content">
-    <!-- items list -->
-    <section class="item-list">
-        <div>
-            <a href="/">back to store</a>
-        </div>
+    <!-- Back link -->
+    <div class="self-start mb-4">
+        <button onclick="window.location.href='/'" class="btn btn-ghost btn-sm">
+            &larr; Back to Store
+        </button>
+    </div>
+
+    <!-- Items list -->
+    <section class="item-list w-full max-w-4xl mx-auto">
+        <h2 class="text-2xl font-bold mb-4">Listed Items</h2>
 
         {% if not items %}
-            <div>
-                <h5>there are no ithtems </h5>
+            <div class="text-center text-gray-600">
+                <h5>There are no items</h5>
                 <p>(－_－) zzZ</p>
             </div>
         {% else %}
-            <table>
-                <tr>
-                    <th class="item-header">Book Title</th>
-                    <th class="action-header">actions</th>
-                </tr>
-                {% for item in items %}
-                    <tr class="item-row">
-                        <td>{{item.title}}</td>
-                        <td>
-                            <a href="/update/{{item.id}}">Edit</a>
-                            <a href="/delete/{{item.id}}">Delete</a>                            
+            <table class="table-auto w-full border border-gray-200 rounded-lg overflow-hidden">
+                <thead class="bg-gray-100">
+                    <tr>
+                        <th class="px-4 py-2 text-left">Book Title</th>
+                        <th class="px-4 py-2 text-left">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr class="hover:bg-gray-50 border-t">
+                        <td class="px-4 py-2">{{ item.title }}</td>
+                        <td class="px-4 py-2 flex gap-2">
+                            <a href="/update/{{ item.id }}" class="btn btn-sm btn-accent">Edit</a>
+                            <a href="/delete/{{ item.id }}" class="btn btn-sm btn-error">Delete</a>
                         </td>
                     </tr>
-                {% endfor %}
-                
-            </table>  
+                    {% endfor %}
+                </tbody>
+            </table>
         {% endif %}
     </section>
-    <!-- form adding new items -->
-    <section class="item-form">
-        <h3>INSERT NEW ITEM</h3>
-        <form action="/admin" method="POST" enctype="multipart/form-data">
-            <input type="text" name="title" placeholder="title" required> 
-            <input type="text" name="description" placeholder="description" required>
-            <input type="number" name="price" step="0.01" min="0" placeholder="price " required>
-            <label for="cover">Upload cover</label>
-            <input type="file" name="cover">
-            <label for="pdf-book">Upload pdf book</label>
-            <input type="file" name="pdf-book" >
-            <input type="submit" value="List Item" id="btn-add">
+
+    <!-- Form to add new items -->
+    <section class="item-form w-full max-w-4xl mx-auto">
+        <h3 class="text-xl font-bold mb-4">Insert New Item</h3>
+        <form action="/admin" method="POST" enctype="multipart/form-data" class="flex flex-col gap-4">
+            <input type="text" name="title" placeholder="Title" class="input input-bordered w-full" required>
+            <textarea name="description" placeholder="Description" class="textarea textarea-bordered w-full" rows="4" required>{{ request.form.description or '' }}</textarea>
+            <input type="number" name="price" step="0.01" min="0" placeholder="Price" class="input input-bordered w-full" required>
+
+            <div class="flex flex-col gap-1">
+                <label for="cover" class="font-medium text-sm">Upload cover</label>
+                <input type="file" name="cover" class="file-input file-input-bordered w-full">
+            </div>
+
+            <div class="flex flex-col gap-1">
+                <label for="pdf-book" class="font-medium text-sm">Upload PDF book</label>
+                <input type="file" name="pdf-book" class="file-input file-input-bordered w-full">
+            </div>
+
+            <input type="submit" value="List Item" class="btn btn-primary mt-2 w-full">
         </form>
     </section>
 </main>
-    
-{% endblock body %} 
+{% endblock body %}

@@ -1,21 +1,39 @@
 {% extends 'baseTamplate.html' %}
 
 {% block head %}
-    <title>Artiom Ivanov Store | Admin Pannel</title>
+    <title>Artiom Ivanov Store | Admin Panel</title>
 {% endblock head %}
 
 {% block body %}
-    <main>
-        <p>{{error}}</p>
-        <form action="/register" method="post">
-            <input type="email" placeholder="email" name="email">
-            <input type="username" placeholder="username" name="username">
-            <input type="password" placeholder="password" name="password">
-            <input type="submit" value="register">
-            <div>
-                <p>Already have an account? <a href="/login">Login</a></p>
+<main class="min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-md bg-base-100 p-8 rounded-lg shadow-lg">
+        <h2 class="text-2xl font-bold text-center mb-6">Register Admin</h2>
+
+        {% if error %}
+            <div class="alert alert-error mb-4">
+                <span>{{ error }}</span>
             </div>
+        {% endif %}
+
+        <form action="/register" method="post" class="flex flex-col gap-4">
+            <input type="email" name="email" placeholder="Email"
+                   class="input input-bordered w-full" required>
+            <input type="text" name="username" placeholder="Username"
+                   class="input input-bordered w-full" required>
+            <input type="password" name="password" placeholder="Password"
+                   class="input input-bordered w-full" required>
+            <input type="submit" value="Register"
+                   class="btn btn-primary w-full mt-2">
         </form>
-        <a href="/">back to store</a>
-    </main>
+
+        <p class="text-center text-sm mt-4">
+            Already have an account? 
+            <a href="/login" class="link link-primary">Login</a>
+        </p>
+
+        <div class="text-center mt-4">
+            <a href="/" class="btn btn-ghost btn-sm">Back to Store</a>
+        </div>
+    </div>
+</main>
 {% endblock body %}

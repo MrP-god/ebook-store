@@ -1,26 +1,32 @@
 {% extends 'baseTamplate.html' %}
 
 {% block head %}
-    
+    <title>Artiom Ivanov Store | Cart</title>
 {% endblock head %}
 
 {% block body %}
-    <main class="content">
-        <div style="display: flex; flex-direction: column;">
-            <a  href="/">back to store</a>
-            {% if not items %}
-                <p>no items in here -_-</p>
-            {% else %}
-                <ul>
-                    {% for item in items %}
-                        <li>
-                            <h2>{{item.title}}</h2>
-                            <p>{{item.price}}</p>
-                            <a href="/remove-cart-item/{{item.id}}">x</a>
-                        </li>
-                    {% endfor %}
-                </ul>
-            {% endif %}
+<main class="min-h-screen p-4 flex justify-center">
+    <div class="w-full max-w-3xl bg-base-100 p-6 rounded-lg shadow-lg">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold">Your Cart</h2>
+            <a href="/" class="btn btn-ghost btn-sm">Back to Store</a>
         </div>
-    </main>
+
+        {% if not items %}
+            <p class="text-center text-base-content">No items in your cart -_-</p>
+        {% else %}
+            <ul class="flex flex-col gap-4">
+                {% for item in items %}
+                    <li class="flex justify-between items-center bg-base-200 p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                        <div>
+                            <h3 class="font-semibold text-lg">{{ item.title }}</h3>
+                            <p class="text-base-content">${{ item.price }}</p>
+                        </div>
+                        <a href="/remove-cart-item/{{ item.id }}" class="btn btn-error btn-sm">Remove</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
+</main>
 {% endblock body %}

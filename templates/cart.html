@@ -17,15 +17,28 @@
         {% else %}
             <ul class="flex flex-col gap-4">
                 {% for item in items %}
-                    <li class="flex justify-between items-center bg-base-200 p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-                        <div>
-                            <h3 class="font-semibold text-lg">{{ item.title }}</h3>
-                            <p class="text-base-content">${{ item.price }}</p>
+                    <li class="flex items-center justify-between bg-base-200 p-3 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                        <figure class="w-12 h-16 flex-shrink-0">
+                            <img src="{{ item.keyBookCover | presignedUrl }}" alt="book cover"
+                                class="w-full h-full object-contain" />
+                        </figure>
+                        <div class="flex-1 ml-3">
+                            <h3 class="font-medium text-base">{{ item.title }}</h3>
+                            <p class="text-sm text-base-content">${{ item.price }}</p>
                         </div>
-                        <a href="/remove-cart-item/{{ item.id }}" class="btn btn-error btn-sm">Remove</a>
+                        <a href="/remove-cart-item/{{ item.id }}" class="btn btn-error btn-xs">Remove</a>
                     </li>
+
+
                 {% endfor %}
             </ul>
+            <div class="mt-6 flex justify-between items-center border-t pt-4">
+                <p class="text-lg font-semibold">
+                    Total: ${{ total }}
+                </p>
+                <a href="/cart-checkout" class="btn btn-primary">Checkout</a>
+            </div>
+           
         {% endif %}
     </div>
 </main>

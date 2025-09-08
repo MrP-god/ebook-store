@@ -20,7 +20,7 @@
                         
                         <!-- Image: takes 2/3 of card height -->
                         <figure class="overflow-hidden h-64 flex-shrink-0">
-                            <img src="{{url_for('static', filename='temp.jpg')}}" alt="book cover"
+                            <img src="{{item.keyBookCover | presignedUrl}}" alt="book cover"
                                 class="w-full h-full object-cover hover:scale-105 transition-transform duration-300">
                         </figure>
 

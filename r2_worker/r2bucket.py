@@ -1,6 +1,7 @@
 import os
 import boto3
 from botocore.exceptions import ClientError
+from botocore.config import Config
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -19,11 +20,20 @@ class R2Bucket:
             endpoint_url=f"https://{account_id}.r2.cloudflarestorage.com",
             aws_access_key_id=access_key,
             aws_secret_access_key=secret_key,
+            config=Config(signature_version="s3v4"),
+            region_name="auto"
         )
 
     def upload_file(self, file_path, key_name):
-        self.s3.upload_file(file_path, self.bucket_name)
+        self.s3.upload_file(file_path, self.bucket_name, key_name)
         print(f"Uploaded {file_path} as {key_name}")
+
+    def delete_file(self, key_name):
+        self.s3.delete_object(
+            Bucket=self.bucket_name,
+            Key=key_name
+        )
+        print(f"Deleted {key_name} from {self.bucket_name}")
 
 
     def generate_presigned_url(self, key_name, expiration=3600):

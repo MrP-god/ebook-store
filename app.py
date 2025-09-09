@@ -1,12 +1,12 @@
 #imports
-from flask import Flask, render_template, redirect, request, session, url_for
+from flask import Flask, render_template, redirect, request, session, url_for, Request
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import JSON
 from sqlalchemy.ext.mutable import MutableList
 from flask_migrate import Migrate
 from datetime import datetime
-import os
+import os, time, secrets
 from functools import wraps
 import stripe
 
@@ -20,7 +20,8 @@ from r2_worker import R2Bucket
 #setup
 app = Flask(__name__) #this creates the app
 app.secret_key = os.environ.get("SECRET_KEY") or "fallback-dev-key" # this is for the session
-stripe.api_key = os.environ.get("STRIPE_KEY") 
+stripe.api_key = os.environ.get("STRIPE_KEY")
+TOKEN_EXPIRY = float(os.getenv("TOKEN_EXPIRY"))
 
 bucket = R2Bucket("ebook-artiomivanov-store")
 
@@ -105,6 +106,11 @@ def presignedUrlFilter(objectKey):
     return bucket.generate_presigned_url(objectKey)
 
 
+@app.template_filter("presignedDownloadUrl")
+def presignedDownload(objectKey):
+    return bucket.generete_download_url(objectKey)
+
+
 
 #routes
 @app.route("/") #this is a decoretor that transform the index function in a route (url)
@@ -182,6 +188,48 @@ def bookPage(id:int):
 
 #================================ROUTES CHECKOUT==========================================================
 
+
+@app.route("/start-success")
+def start_success():
+
+    idsStr = request.args.get("ids", "")
+
+    token = secrets.token_urlsafe(16)
+    session["success_token"] = {
+        "token": token,
+        "expiry": time.time() + TOKEN_EXPIRY
+    }
+    return redirect(url_for("succesPayment", ids=idsStr, token=token))
+
+
+#route for succes payment with signed pdf gave to user
+@app.route("/success-payment", methods=["GET"])
+def succesPayment():
+
+    # remove items from cart x user
+    user = User.query.filter_by(username=session["username"]).first()
+    user.cartItems.clear()
+    db.session.commit()
+
+
+    #check if user has bought the item
+    tokenData = session.get("success_token")
+    token = request.args.get("token")
+
+    if not tokenData or token != tokenData["token"]:
+        return "Unauthorized", 403
+    if time.time() > tokenData["expiry"]:
+        return "Token expired", 403
+    
+
+    idsStr = request.args.get("ids", "")
+    ids = [int(x) for x in idsStr.split(",") if x]
+    items = Item.query.filter(Item.id.in_(ids)).all()
+    return render_template("success.html", items=items)
+
+
+
+
 @app.route("/checkout/<int:id>", methods=["GET", "POST"])
 def checkout(id:int):
 
@@ -203,10 +251,11 @@ def checkout(id:int):
                 },
                 "quantity": 1,
             }],
-            success_url=url_for("index" , _external=True), 
+            success_url=url_for("start_success" ,ids=id, _external=True), 
             cancel_url=url_for("bookPage", id=id, _external=True)
         )
         return redirect(stripeSession.url)
+
 
 
 @app.route("/cart-checkout", methods=["GET", "POST"])
@@ -217,6 +266,7 @@ def bulckCheckout():
     else:
         user = User.query.filter_by(username=session["username"]).first()
         items = Item.query.filter(Item.id.in_(user.cartItems)).all()
+        ids = ",".join(str(i.id) for i in items)
 
         line_items = [
             {
@@ -238,8 +288,8 @@ def bulckCheckout():
             payment_method_types=["card"],
             mode="payment",
             line_items=line_items,
-            success_url=url_for("index" , _external=True), 
-            cancel_url=url_for("cart", id=id, _external=True)
+            success_url=url_for("start_success", ids=ids, _external=True), 
+            cancel_url=url_for("cart", _external=True)
         )
         return redirect(stripeSession.url)
         

@@ -1,0 +1,48 @@
+{% extends 'baseTamplate.html' %}
+{% block head %}
+<!-- Tailwind + DaisyUI included in your base layout -->
+{% endblock head %}
+
+{% block body %}
+<main class="min-h-screen p-8">
+    <section class="max-w-3xl mx-auto">
+
+        <div class="rounded-lg border border-yellow-400 bg-yellow-50 px-4 py-3 mb-6">
+            <span class="text-sm text-yellow-800">
+                Reminder: This page is for <strong>one-time use</strong>. Your download links will <strong>expire shortly</strong>. Please download your files now.
+            </span>
+        </div>
+
+        <h3 class="text-3xl font-bold mb-6 text-center text-gray-900">Your Downloads</h3>
+
+        <ul class="space-y-4">
+            {% for item in items %}
+            <li class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition">
+                <span class="font-medium text-gray-800">{{ item.title }}</span>
+                <a href="{{ item.keyBookFile | presignedDownloadUrl }}" target="_blank" 
+                   class="btn btn-sm btn-primary download-btn">
+                    Download
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+
+    </section>
+</main>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const buttons = document.querySelectorAll(".download-btn");
+
+    buttons.forEach(btn => {
+        btn.addEventListener("click", () => {
+            // just change style to indicate used
+            btn.classList.remove("btn-primary");
+            btn.classList.add("btn-success");
+            btn.textContent = "Downloaded";
+            // do NOT disable, so it can be clicked again
+        });
+    });
+});
+</script>
+{% endblock body %}

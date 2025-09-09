@@ -47,3 +47,25 @@ class R2Bucket:
         except ClientError as e:
             print(f"Error generating presigned URL: {e}")
             return None
+        
+    def generete_download_url(self, key_name, expiration=3600):
+
+        filename = key_name.split("/")[-1]
+        if not filename.lower().endswith(".pdf"):
+            filename += ".pdf"
+
+        try:
+            url = self.s3.generate_presigned_url(
+                "get_object",
+                Params={
+                    "Bucket": self.bucket_name,
+                    "Key": key_name,
+                    "ResponseContentDisposition": f'attachment; filename="{filename}"'
+                },
+                ExpiresIn=expiration
+            )
+            return url
+        except ClientError as e:
+            print(f"Error generating presigned URL: {e}")
+            return None
+

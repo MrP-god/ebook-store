@@ -2,4 +2,4 @@ __pycache__
 env
 .env
 migrations
-*.db
+# *.db this is just when i paid for render

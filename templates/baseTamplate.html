@@ -11,31 +11,41 @@
 
     {% block head %}{% endblock head %}
 </head>
-<body class="min-h-screen flex flex-col bg-base-100 text-base-content">
-    <!-- Navbar -->
-    <nav class="navbar bg-primary text-primary-content px-4">
-        <h3 class="text-lg font-bold"><a href="/">Ivanov Artiom Store</a></h3>
-        <div class="ml-auto flex gap-4">
+<body class="min-h-screen flex flex-col bg-base-100 text-base-content overflow-hidden">
+    <nav class="navbar bg-primary text-primary-content px-2">
+        <h3 class="text-base font-semibold"><a href="/">Ivanov Artiom Store</a></h3>
+        <div class="ml-auto flex gap-2">
             {% if not "username" in session %}
                 <a href="/login" class="btn btn-sm btn-secondary">Login</a>
                 <a href="/cart" class="btn btn-sm btn-outline">Cart</a>
             {% else %}
-            {% if session.get("userType") == "admin" %}
-                <a href="/admin" class="btn btn-sm btn-accent">Admin Panel</a>
-            {% endif %}
-                <a href="/cart" class="btn btn-sm btn-outline">Cart</a>
+                {% if session.get("userType") == "admin" %}
+                    <a href="/admin" class="btn btn-sm btn-accent">Admin Panel</a>
+                {% endif %}
+
+                <div tabindex="0" role="button" onclick="location.href='/cart';">
+                    <div class="indicator">
+                        <span class="btn btn-sm btn-outline">Cart</span>
+                        {% if "cart_items" in session %}
+                            <span class="badge badge-xs indicator-item">{{session["cart_items"]}}</span>  
+                        {% endif %}
+                          
+                    </div>
+                </div>
                 <a href="/logout" class="btn btn-sm btn-error">Logout</a>
+  
             {% endif %}
         </div>
     </nav>
 
+
     <!-- Main -->
-    <main class="flex-grow container mx-auto p-6">
-        {% block body %}{% endblock body %}
-    </main>
+
+    {% block body %}{% endblock body %}
+
 
     <!-- Footer -->
-    <footer class="footer footer-center p-4 bg-base-200 text-base-content">
+    <footer class="footer footer-center p-2 bg-base-200 text-base-content">
         <p class="text-sm">© 2024 Ivanov Artiom Store</p>
     </footer>
 </body>

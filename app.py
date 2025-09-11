@@ -5,14 +5,15 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import JSON
 from sqlalchemy.ext.mutable import MutableList
 from flask_migrate import Migrate
-from datetime import datetime
-import os, time, secrets
+from datetime import datetime, timedelta
 from functools import wraps
+
 import stripe
+import os, time, secrets, random
 
 # my modules
 from r2_worker import R2Bucket
-
+from helpers.email_verification_logic import send_verification_email
 
 
 #MY APP
@@ -21,7 +22,7 @@ from r2_worker import R2Bucket
 app = Flask(__name__) #this creates the app
 app.secret_key = os.environ.get("SECRET_KEY") or "fallback-dev-key" # this is for the session
 stripe.api_key = os.environ.get("STRIPE_KEY")
-TOKEN_EXPIRY = float(os.getenv("TOKEN_EXPIRY"))
+TOKEN_EXPIRY = float(os.getenv("TOKEN_EXPIRY")) 
 
 bucket = R2Bucket("ebook-artiomivanov-store")
 
@@ -67,14 +68,12 @@ class User(db.Model):
     role = db.Column(db.String(20), nullable=False)
     cartItems = db.Column(MutableList.as_mutable(JSON), default=list)
 
-    def __init__(self, username, email, password):
-        self.setPassword(password=password)
+    def __init__(self, username, email, password): # password is already hashed outside
+        self.passwordHash = password
         self.username = username
         self.email = email
         self.role = "user" # explicit save the role
 
-    def setPassword(self, password):
-        self.passwordHash = generate_password_hash(password=password)
 
     def checkPassword(self, password):
         return check_password_hash(self.passwordHash, password=password)
@@ -112,6 +111,12 @@ def presignedDownload(objectKey):
 
 
 
+
+
+
+
+
+
 #routes
 @app.route("/") #this is a decoretor that transform the index function in a route (url)
 def index():
@@ -120,6 +125,12 @@ def index():
     for item in items:
         print(item.keyBookCover)
     return render_template("index.html", items=items)
+
+
+
+
+
+
 
 
 #login
@@ -141,6 +152,12 @@ def login():
 
         return render_template("login.html", error="")
 
+
+
+
+
+
+
 #register
 @app.route("/register", methods=["POST", "GET"])
 def register():
@@ -149,34 +166,112 @@ def register():
         password = request.form["password"]
         email = request.form["email"]
 
-        # Check for existing username or email
-        userEmail = User.query.filter_by(email=email).first()
-        userUsername = User.query.filter_by(username=username).first()
+        # check existing
+        if User.query.filter_by(email=email).first():
+            return render_template("register.html", error="Email already registered")
+        if User.query.filter_by(username=username).first():
+            return render_template("register.html", error="Username already taken")
 
-        if userEmail:
-            return render_template("register.html", error="Email already registered, please login!")
-        if userUsername:
-            return render_template("register.html", error="Username already taken!")
+        # store in session temporarily
+        session["pending_user"] = {
+            "username": username,
+            "hash_password": generate_password_hash(password),  
+            "email": email
+        }
 
-        newUser = User(username=username, email=email, password=password)
-        try:
-            db.session.add(newUser)
-            db.session.commit()
-            session["username"] = username
-            return redirect("/")
-        except Exception as e:
-            print(f"Registration error: {e}")  # For debugging
-            return render_template("register.html", error="Registration failed. Please try again.")
+        return redirect(url_for("checkVerificationCode"))
     else:
         return render_template("register.html")
             
 
 
+
+
+
+@app.route("/send-verification-code", methods=["GET", "POST"])
+def sendVerificationCode():
+    # here generete code
+    generetedCode = random.choices(range(10), k=6)
+    response = send_verification_email(generetedCode, session["pending_user"]["email"])
+    
+    if response.status_code == 200:
+        session["verification_code"] = generetedCode
+        session["code_expires"] = (datetime.now() + timedelta(minutes=30)).isoformat()
+        return render_template("email-verification-page.html", message="✅ Code sent! It will expire in 30 minutes.")
+    else:
+        return render_template("email-verification-page.html", message="⚠️ Error sending code. Try again.")
+    
+
+
+
+
+
+
+@app.route("/check-verification-code", methods=["POST", "GET"])
+def checkVerificationCode():
+    if request.method == "POST":
+        code = request.form.get("verification-code")
+
+        if "verification_code" not in session:
+            return render_template("email-verification-page.html", message="⚠️ You must send a code first.")
+
+        expiresAt = datetime.fromisoformat(session["code_expires"])
+        if datetime.now() >= expiresAt:
+            session.pop("verification_code", None)
+            session.pop("code_expires", None)
+            return render_template("email-verification-page.html", message="⚠️ Code expired. Please request a new one.")
+
+        if code == str(session["verification_code"]):
+            pending = session.get("pending_user")
+            if not pending:
+                return render_template("register.html", error="No pending registration found.")
+
+            try:
+                newUser = User(
+                    username=pending["username"],
+                    email=pending["email"],
+                    password=pending["hash_password"]
+                )
+                db.session.add(newUser)
+                db.session.commit()
+
+                session.pop("pending_user", None)
+                session.pop("verification_code", None)
+                session.pop("code_expires", None)
+
+                user = User.query.filter_by(username=pending["username"]).first()
+                session["username"] = user.username
+                session["userType"] = user.role
+
+                
+
+                return redirect(url_for("index"))
+            except Exception as e:
+                print(f"Registration error: {e}")
+                return render_template("register.html", error="Registration failed. Try again.")
+        
+        return render_template("email-verification-page.html", message="⚠️ Invalid code.")
+    
+    # GET request
+    return render_template("email-verification-page.html", message=None)
+
+        
+        
+
+    
+
+
 #logout
 @app.route("/logout", methods=["GET"])
 def logout():
+    user = User.query.filter_by(username=session["username"]).first()
     session.pop("username", None)
+    session["userType"] = user.role
     return redirect("/")
+
+
+
+
 
 
 #ebook-single-page
@@ -186,7 +281,14 @@ def bookPage(id:int):
     return render_template("book-page.html", item=item)
 
 
+
+#delete account : TODO
+
+
 #================================ROUTES CHECKOUT==========================================================
+
+
+
 
 
 @app.route("/start-success")
@@ -202,6 +304,10 @@ def start_success():
     return redirect(url_for("succesPayment", ids=idsStr, token=token))
 
 
+
+
+
+
 #route for succes payment with signed pdf gave to user
 @app.route("/success-payment", methods=["GET"])
 def succesPayment():
@@ -210,6 +316,7 @@ def succesPayment():
     user = User.query.filter_by(username=session["username"]).first()
     user.cartItems.clear()
     db.session.commit()
+
 
 
     #check if user has bought the item
@@ -226,6 +333,10 @@ def succesPayment():
     ids = [int(x) for x in idsStr.split(",") if x]
     items = Item.query.filter(Item.id.in_(ids)).all()
     return render_template("success.html", items=items)
+
+
+
+
 
 
 
@@ -255,6 +366,10 @@ def checkout(id:int):
             cancel_url=url_for("bookPage", id=id, _external=True)
         )
         return redirect(stripeSession.url)
+
+
+
+
 
 
 
@@ -365,6 +480,10 @@ def admin():
 
 
 
+
+
+
+
 @app.route("/delete/<int:id>")
 @adminRequired
 def delete(id:int):
@@ -380,6 +499,10 @@ def delete(id:int):
         return redirect("/admin")
     except Exception as e:
         return f"Error: {e}"
+
+
+
+
 
 
 @app.route("/update/<int:id>", methods=["GET", "POST"])
@@ -401,6 +524,9 @@ def update(id:int):
 
 #=======================================ROUTES CART===================================================
 
+
+
+
 #cart
 @app.route("/cart", methods=["GET"])
 def cart():
@@ -416,6 +542,10 @@ def cart():
         return render_template("cart.html", items=items, total=round(total, 2))
     
 
+
+
+
+
 @app.route("/add-cart/<int:id>", methods=["POST" ,"GET"])
 def addItemCart(id:int):
     if not "username" in session:
@@ -425,33 +555,20 @@ def addItemCart(id:int):
         userCart = User.query.filter_by(username=session["username"]).first()
         userCart.addCartItem(id)
         db.session.commit()
+
         return redirect(url_for("index"))
     
+
+
+
+
 @app.route("/remove-cart-item/<int:id>", methods=["POST", "GET"])
 def remoteItemCart(id:int):
     user = User.query.filter_by(username=session["username"]).first()
     user.removeCartItem(id)
     db.session.commit()
+
     return redirect(url_for("cart"))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

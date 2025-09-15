@@ -4,7 +4,7 @@ from botocore.exceptions import ClientError
 from botocore.config import Config
 from dotenv import load_dotenv
 
-load_dotenv()
+# load_dotenv()
 
 class R2Bucket:
     def __init__(self, bucket_name):

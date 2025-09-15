@@ -1,0 +1,33 @@
+{% extends 'baseTamplate.html' %}
+
+{% block head %}
+<title>Artiom Ivanov | Email Verification</title>
+{% endblock head %}
+
+{% block body %}
+<main class="flex-1 flex items-center justify-center p-4">
+
+  <section class="w-full max-w-md p-6 rounded-2xl shadow-md border border-gray-200">
+      {% if message %}
+      <div class="alert alert-warning alert-soft mb-4">
+        <span>{{ message }}</span>
+      </div>
+      {% endif %}
+
+      <form action="/check-verification-code" method="post" class="space-y-4">
+        <div class="flex items-center gap-2">
+          <input type="number" 
+                name="verification-code" 
+                required
+                placeholder="Enter code"
+                class="input input-bordered w-full" />
+          <a href="{{ url_for('sendVerificationCode') }}" class="btn btn-outline btn-primary">
+            Send code
+          </a>
+        </div>
+        <button type="submit" class="btn btn-primary w-full">Verify Code</button>
+      </form>
+  </section>
+</main>
+
+{% endblock body %}

@@ -575,6 +575,15 @@ def remoteItemCart(id:int):
 
 
 
+@app.route("/privacy-policy", methods=["GET"])
+def privacyPolicy():
+    return render_template("privacy-policy.html")
+
+
+
+
+
+
 
 
 # main

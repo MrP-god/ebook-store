@@ -8,15 +8,16 @@ from flask_migrate import Migrate
 from datetime import datetime, timedelta
 from functools import wraps
 
+
 import stripe
-import os, time, secrets, random
+import os, time, secrets, random, dotenv
 
 # my modules
 from r2_worker import R2Bucket
-from helpers.email_verification_logic import send_verification_email
 
 
 #MY APP
+dotenv.load_dotenv()
 
 #setup
 app = Flask(__name__) #this creates the app
@@ -25,6 +26,7 @@ stripe.api_key = os.environ.get("STRIPE_KEY")
 TOKEN_EXPIRY = float(os.getenv("TOKEN_EXPIRY")) 
 
 bucket = R2Bucket("ebook-artiomivanov-store")
+
 
 
 
@@ -115,8 +117,6 @@ def presignedDownload(objectKey):
 
 
 
-
-
 #routes
 @app.route("/") #this is a decoretor that transform the index function in a route (url)
 def index():
@@ -128,7 +128,7 @@ def index():
 
 
 
-
+"""========================================================================================================="""
 
 
 
@@ -136,7 +136,6 @@ def index():
 #login
 @app.route("/login", methods=["POST", "GET"])
 def login():
-    
     if request.method == "POST":
         username = request.form["username"]
         password = request.form["password"]
@@ -146,16 +145,10 @@ def login():
             session["username"] = username
             session["userType"] = user.role
             return redirect(url_for("index"))
-        else: 
-            return render_template("login.html", error="username or password incorect")
+        else:
+            return render_template("login.html", error="Username or password incorrect")
     else:
-
         return render_template("login.html", error="")
-
-
-
-
-
 
 
 #register
@@ -172,106 +165,40 @@ def register():
         if User.query.filter_by(username=username).first():
             return render_template("register.html", error="Username already taken")
 
-        # store in session temporarily
-        session["pending_user"] = {
-            "username": username,
-            "hash_password": generate_password_hash(password),  
-            "email": email
-        }
+        try:
+            newUser = User(
+                username=username,
+                email=email,
+                password=generate_password_hash(password)
+            )
+            db.session.add(newUser)
+            db.session.commit()
 
-        return redirect(url_for("checkVerificationCode"))
+            session["username"] = newUser.username
+            session["userType"] = newUser.role
+
+            return redirect(url_for("index"))
+        except Exception as e:
+            print(f"Registration error: {e}")
+            return render_template("register.html", error="Registration failed. Try again.")
+
     else:
         return render_template("register.html")
-            
-
-
-
-
-
-@app.route("/send-verification-code", methods=["GET", "POST"])
-def sendVerificationCode():
-    # here generete code
-    generetedCode = random.choices(range(10), k=6)
-    response = send_verification_email(generetedCode, session["pending_user"]["email"])
-    
-    if response.status_code == 200:
-        session["verification_code"] = generetedCode
-        session["code_expires"] = (datetime.now() + timedelta(minutes=30)).isoformat()
-        return render_template("email-verification-page.html", message="✅ Code sent! It will expire in 30 minutes.")
-    else:
-        return render_template("email-verification-page.html", message="⚠️ Error sending code. Try again.")
-    
-
-
-
-
-
-
-@app.route("/check-verification-code", methods=["POST", "GET"])
-def checkVerificationCode():
-    if request.method == "POST":
-        code = request.form.get("verification-code")
-
-        if "verification_code" not in session:
-            return render_template("email-verification-page.html", message="⚠️ You must send a code first.")
-
-        expiresAt = datetime.fromisoformat(session["code_expires"])
-        if datetime.now() >= expiresAt:
-            session.pop("verification_code", None)
-            session.pop("code_expires", None)
-            return render_template("email-verification-page.html", message="⚠️ Code expired. Please request a new one.")
-
-        if code == str(session["verification_code"]):
-            pending = session.get("pending_user")
-            if not pending:
-                return render_template("register.html", error="No pending registration found.")
-
-            try:
-                newUser = User(
-                    username=pending["username"],
-                    email=pending["email"],
-                    password=pending["hash_password"]
-                )
-                db.session.add(newUser)
-                db.session.commit()
-
-                session.pop("pending_user", None)
-                session.pop("verification_code", None)
-                session.pop("code_expires", None)
-
-                user = User.query.filter_by(username=pending["username"]).first()
-                session["username"] = user.username
-                session["userType"] = user.role
-
-                
-
-                return redirect(url_for("index"))
-            except Exception as e:
-                print(f"Registration error: {e}")
-                return render_template("register.html", error="Registration failed. Try again.")
-        
-        return render_template("email-verification-page.html", message="⚠️ Invalid code.")
-    
-    # GET request
-    return render_template("email-verification-page.html", message=None)
-
-        
-        
-
-    
 
 
 #logout
 @app.route("/logout", methods=["GET"])
 def logout():
-    user = User.query.filter_by(username=session["username"]).first()
     session.pop("username", None)
-    session["userType"] = user.role
+    session.pop("userType", None)
     return redirect("/")
 
 
 
 
+
+
+"""========================================================================================================="""
 
 
 #ebook-single-page
